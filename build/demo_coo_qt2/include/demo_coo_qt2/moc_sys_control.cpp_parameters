@@ -1,0 +1,5 @@
+-I/home/nxh/ros2_demo2/src/demo_coo_qt2
+-I/home/nxh/ros2_demo2/build/demo_coo_qt2
+-o
+/home/nxh/ros2_demo2/build/demo_coo_qt2/include/demo_coo_qt2/moc_sys_control.cpp
+/home/nxh/ros2_demo2/src/demo_coo_qt2/include/demo_coo_qt2/sys_control.hpp

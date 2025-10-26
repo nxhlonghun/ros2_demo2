@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "demo_interface__py",
+		"source" : "/home/nxh/ros2_demo2/build/demo_interface/demo_interface__py"
+	}
+}

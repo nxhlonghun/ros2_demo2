@@ -1,0 +1,8 @@
+{
+  "package_name": "demo_interface",
+  "non_idl_tuples": [
+    "/home/nxh/ros2_demo2/src/demo_interface:srv/FaceDetector.srv",
+    "/home/nxh/ros2_demo2/src/demo_interface:srv/Partol.srv",
+    "/home/nxh/ros2_demo2/src/demo_interface:msg/System.msg"
+  ]
+}

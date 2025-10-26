@@ -1,0 +1,27 @@
+{
+  "configurations": [
+    {
+      "name": "Linux",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/src/**",
+        "/opt/ros/${ROS_DISTRO}/include/**",
+        "/opt/ros/humble/include/**",
+        "/opt/ros/humble/include/rclcpp/**",
+        "/home/nxh/ros2_demo1/install/**",
+        "/home/nxh/ros2_demo2/install/**",
+        "/opt/ros/humble/include/nav2_costmap_2d",
+        "/usr/include/opencv4",
+        "/home/nxh/ros2_demo1/src/**",
+        "/home/nxh/ros2_demo2/src/**",
+        "/home/nxh/Qt/**"
+      ],
+      "defines": [],
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "c17",
+      "cppStandard": "gnu++17",
+      "intelliSenseMode": "linux-gcc-x64"
+    }
+  ],
+  "version": 4
+}

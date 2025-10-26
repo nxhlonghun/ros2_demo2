@@ -1,0 +1,4 @@
+source;share/demo_coo_qt2/local_setup.bash
+source;share/demo_coo_qt2/local_setup.dsv
+source;share/demo_coo_qt2/local_setup.sh
+source;share/demo_coo_qt2/local_setup.zsh

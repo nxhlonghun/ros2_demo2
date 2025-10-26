@@ -1,0 +1,5 @@
+-I/home/nxh/ros2_demo2/src/demo_cpp_qt2
+-I/home/nxh/ros2_demo2/build/demo_cpp_qt2
+-o
+/home/nxh/ros2_demo2/build/demo_cpp_qt2/include/demo_cpp_qt2/moc_sys_sub_node.cpp
+/home/nxh/ros2_demo2/src/demo_cpp_qt2/include/demo_cpp_qt2/sys_sub_node.hpp
