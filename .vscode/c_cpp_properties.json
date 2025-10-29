@@ -14,6 +14,7 @@
         "/usr/include/opencv4",
         "/home/nxh/ros2_demo1/src/**",
         "/home/nxh/ros2_demo2/src/**",
+        "/usr/include/OGRE",
         "/home/nxh/Qt/**"
       ],
       "defines": [],

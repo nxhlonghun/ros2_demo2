@@ -1,23 +1,25 @@
-#include "demo_cpp_qt2/ROSNodeClass.hpp"
+#include "demo_cpp_qt2/RosNodeClass.hpp"
 
-ROSNodeClass::ROSNodeClass()
+RosNodeClass::RosNodeClass()
 {
     m_executor = new rclcpp::executors::SingleThreadedExecutor();
 
     options.use_intra_process_comms(true);
+
     m_subNode = make_shared<SysSub>("system_sub_node", options);
     m_pubNode = make_shared<SysNode>("system_pub_node", options);
+    // m_rosNode = rclcpp::Node::make_shared("rviz_node");
 
     m_executor->add_node(m_subNode->get_node_base_interface());
     m_executor->add_node(m_pubNode);
 }
 
-SysSub *ROSNodeClass::getSubNode()
+SysSub *RosNodeClass::getSubNode()
 {
     return m_subNode.get();
 }
 
-std::vector<std::string> ROSNodeClass::getTopicList(string nodename_)
+std::vector<std::string> RosNodeClass::getTopicList(string nodename_)
 {
     auto all_topics_and_types = m_pubNode->get_topic_names_and_types();
     std::vector<std::string> pub_topics;
@@ -57,16 +59,16 @@ std::vector<std::string> ROSNodeClass::getTopicList(string nodename_)
     return sub_topics;
 }
 
-void ROSNodeClass::startNode()
+void RosNodeClass::startNode()
 {
     m_subNode->startNode();
 }
-void ROSNodeClass::stopNode()
+void RosNodeClass::stopNode()
 {
     m_subNode->stopNode();
 }
 
-std::vector<std::string> ROSNodeClass::getNodeList()
+std::vector<std::string> RosNodeClass::getNodeList()
 {
     std::vector<std::string> nodeList;
     array<char, 128> buffer;

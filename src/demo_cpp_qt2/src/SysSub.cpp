@@ -1,7 +1,7 @@
 #include <QApplication>
 #include <QLabel>
 #include <QString>
-#include "demo_cpp_qt2/sys_sub_node.hpp"
+#include "demo_cpp_qt2/SysSub.hpp"
 
 SysSub::SysSub(const string &node_name, const rclcpp::NodeOptions &options) : rclcpp_lifecycle::LifecycleNode(node_name, options)
 {

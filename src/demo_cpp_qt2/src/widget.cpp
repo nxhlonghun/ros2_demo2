@@ -2,7 +2,6 @@
 #include "demo_cpp_qt2/Widget.h"
 #include <QToolButton>
 #include <QDateTime>
-
 #define TABLE_COL_COUNT 6
 #define INIT_TOPIC_COUNT 16
 
@@ -12,7 +11,7 @@ Widget::Widget(QWidget *parent)
     ui->setupUi(this);
 
     initTable();
-
+    initRvizWidget();
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->treeWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(onCustomContextMenu(const QPoint &)));
 
@@ -24,6 +23,43 @@ Widget::Widget(QWidget *parent)
     connect(ui->refreshNodeBtn, SIGNAL(clicked()), this, SLOT(onRefreshNodeBtnClicked()));
 
     connect(m_nodeclass.getSubNode(), SIGNAL(sendmsg(QString)), this, SLOT(onRecv(QString)));
+    m_spinThread = new RosSpinThread(m_nodeclass.getExecutor(), this);
+    m_spinThread->start();
+}
+
+void Widget::initRvizWidget()
+{
+
+    m_renderPanel_ = new rviz_common::RenderPanel(ui->frame);
+
+    QVBoxLayout *layout = new QVBoxLayout(ui->frame);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(m_renderPanel_);
+
+    m_clock = make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+    m_rosNodeAbstraction = std::make_shared<rviz_common::ros_integration::RosNodeAbstraction>("rviz_node");
+
+    m_visualizationManager_ = new rviz_common::VisualizationManager(m_renderPanel_, m_rosNodeAbstraction, nullptr, m_clock);
+
+    m_renderPanel_->initialize(m_visualizationManager_);
+    m_visualizationManager_->initialize();
+    m_visualizationManager_->startUpdate();
+
+    rviz_common::Display *map_display = m_visualizationManager_->createDisplay("rviz_default_plugins/Map", "Map", true);
+    if (map_display)
+    {
+        map_display->subProp("Topic")->setValue("/map");
+    }
+    rviz_common::Display *laser_display = m_visualizationManager_->createDisplay("rviz_default_plugins/LaserScan", "Laser", true);
+    if (map_display)
+    {
+        laser_display->subProp("Topic")->setValue("/scan");
+    }
+    rviz_common::Display *path_display = m_visualizationManager_->createDisplay("rviz_default_plugins/Path", "Path", true);
+    if (map_display)
+    {
+        path_display->subProp("Topic")->setValue("/planned_path");
+    }
 }
 
 void Widget::onRecv(QString value)
@@ -36,7 +72,7 @@ void Widget::onRefreshNodeBtnClicked()
     removeTreeItem(m_rootItem);
     // call get node list func
     // 获取node列表
-    std::vector<std::string> nodeList = ROSNodeClass::getNodeList();
+    std::vector<std::string> nodeList = RosNodeClass::getNodeList();
     for (int i = 0; i < nodeList.size(); i++)
     {
         QString value = QString(nodeList[i].c_str());
@@ -239,6 +275,12 @@ void Widget::initTable()
 
 Widget::~Widget()
 {
+    if (m_spinThread)
+    {
+        m_nodeclass.getExecutor()->cancel();
+        m_spinThread->quit();
+        m_spinThread->wait();
+    }
     delete ui;
 }
 /*

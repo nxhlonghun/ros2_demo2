@@ -9,8 +9,12 @@
 #include <QMenu>
 #include <QTableView>
 #include <QStandardItemModel>
+#include <rviz_common/render_panel.hpp>
+#include <rviz_common/visualization_manager.hpp>
+#include <rviz_common/display.hpp>
 
-#include "demo_cpp_qt2/ROSNodeClass.hpp"
+#include "demo_cpp_qt2/RosSpinThread.hpp"
+#include "demo_cpp_qt2/RosNodeClass.hpp"
 
 using namespace std;
 
@@ -26,12 +30,11 @@ class Widget : public QWidget
     Q_OBJECT
 
 public:
-    ROSNodeClass m_nodeclass;
+    RosNodeClass m_nodeclass;
+    RosSpinThread *m_spinThread = nullptr;
     QString qmsg;
     Widget(QWidget *parent = nullptr);
     ~Widget();
-
-    Ui::Widget *ui;
 
 private slots:
 
@@ -48,6 +51,11 @@ private slots:
 private:
     void removeTreeItem(QTreeWidgetItem *item);
     void initTable();
+    void initRvizWidget();
+    rviz_common::RenderPanel *m_renderPanel_;
+    rviz_common::VisualizationManager *m_visualizationManager_;
+    rclcpp::Clock::SharedPtr m_clock;
+    std::shared_ptr<rviz_common::ros_integration::RosNodeAbstraction> m_rosNodeAbstraction;
 
 signals:
     void PB_node_start();
@@ -62,5 +70,6 @@ private:
     QStandardItemModel *m_dataTableModel = nullptr;
 
     std::vector<std::string> list(std::vector<std::string> list);
+    Ui::Widget *ui;
 };
 #endif // WIDGET_H
