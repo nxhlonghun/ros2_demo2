@@ -9,9 +9,12 @@
 #include <QMenu>
 #include <QTableView>
 #include <QStandardItemModel>
-//#include <rviz_common/render_panel.hpp>
-//#include <rviz_common/visualization_manager.hpp>
-//#include <rviz_common/display.hpp>
+#include <QFile>
+#include <QMutex>
+#include <QPainter>
+// #include <rviz_common/render_panel.hpp>
+// #include <rviz_common/visualization_manager.hpp>
+// #include <rviz_common/display.hpp>
 
 // #include "demo_cpp_qt2/RosSpinThread.hpp"
 #include "demo_cpp_qt2/RosNodeClass.hpp"
@@ -30,12 +33,12 @@ class Widget : public QWidget
     Q_OBJECT
 
 public:
-    RosNodeClass *m_nodeclass = nullptr;
     // RosSpinThread *m_spinThread = nullptr;
     QString qmsg;
     Widget(QWidget *parent = nullptr);
     ~Widget();
-
+    RosNodeClass *m_nodeclass = nullptr;
+    bool loadMapFromFiles(const QString &pgmFiile, const QString &yamlFile);
 private slots:
 
     void onRefreshNodeBtnClicked();
@@ -44,6 +47,12 @@ private slots:
     void onExpandNode();
     void onGetTopicList();
     void onSubBtnClicked();
+
+    void onPoseUpdated(double x, double y, double yaw);
+    void onLaserUpdated(const QVector<QPointF> &points); // points in robot frame
+    void onOccupancyGridUpdated(const QVector<int> &data, unsigned int width, unsigned int height,
+                                double resolution, double origin_x, double origin_y, double origin_theta);
+
     // void PB_clicked();
 
     void onRecv(QString value);
@@ -51,12 +60,29 @@ private slots:
 private:
     void removeTreeItem(QTreeWidgetItem *item);
     void initTable();
-    void initRvizWidget();
-    //rviz_common::RenderPanel *m_renderPanel_;
-    //rviz_common::VisualizationManager *m_visualizationManager_;
+    // void initRvizWidget();
+    //  rviz_common::RenderPanel *m_renderPanel_;
+    //  rviz_common::VisualizationManager *m_visualizationManager_;
     rclcpp::Clock::SharedPtr m_clock;
-    //std::shared_ptr<rviz_common::ros_integration::RosNodeAbstraction> m_rosNodeAbstraction;
+    // std::shared_ptr<rviz_common::ros_integration::RosNodeAbstraction> m_rosNodeAbstraction;
 
+    QPoint worldToImage(double wx, double wy) const;
+    QPointF robotLocalToWorld(double lx, double ly) const;
+    QImage baseMap_;
+    double map_resolution_{0.05};
+    double map_origin_x_{0.0}, map_origin_y_{0.0}, map_origin_theta_{0.0};
+    double robot_x_{0.0}, robot_y_{0.0}, robot_yaw_{0.0};
+    QVector<QPointF> laser_points_robot_;
+    QVector<int> occupancy_data_;
+    unsigned int occ_width_{0}, occ_height_{0};
+    double occ_resolution_{0};
+    double occ_origin_x_{0}, occ_origin_y_{0}, occ_origin_theta_{0};
+    QImage occ_image_; // 用于渲染的灰度图像
+
+    mutable QMutex mutex_;
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
 signals:
     void PB_node_start();
     void PB_node_stop();
