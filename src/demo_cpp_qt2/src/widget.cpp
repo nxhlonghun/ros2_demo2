@@ -11,7 +11,8 @@ Widget::Widget(QWidget *parent)
     ui->setupUi(this);
 
     initTable();
-    initRvizWidget();
+    // initRvizWidget();
+    m_nodeclass = new RosNodeClass();
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->treeWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(onCustomContextMenu(const QPoint &)));
 
@@ -22,12 +23,18 @@ Widget::Widget(QWidget *parent)
 
     connect(ui->refreshNodeBtn, SIGNAL(clicked()), this, SLOT(onRefreshNodeBtnClicked()));
 
-    connect(m_nodeclass.getSubNode(), SIGNAL(sendmsg(QString)), this, SLOT(onRecv(QString)));
-    m_spinThread = new RosSpinThread(m_nodeclass.getExecutor(), this);
-    m_spinThread->start();
+    connect(m_nodeclass->getSubNode(), &SystemSub::NodeListSub::sendmsg, this, &Widget::onRecv, Qt::QueuedConnection);
+
+    m_nodeclass->startNode();
 }
 
-void Widget::initRvizWidget()
+Widget::~Widget()
+{
+
+    delete ui;
+}
+
+/*void Widget::initRvizWidget()
 {
 
     m_renderPanel_ = new rviz_common::RenderPanel(ui->frame);
@@ -60,7 +67,7 @@ void Widget::initRvizWidget()
     {
         path_display->subProp("Topic")->setValue("/planned_path");
     }
-}
+}*/
 
 void Widget::onRecv(QString value)
 {
@@ -81,7 +88,6 @@ void Widget::onRefreshNodeBtnClicked()
     }
 
     ui->plainTextEdit->appendPlainText("get node list success, count is " + QString::number(nodeList.size()));
-
     onExpandNode();
 }
 
@@ -158,7 +164,7 @@ void Widget::onGetTopicList()
         nodeName = nodeName.remove('\r');
         nodeName = nodeName.remove('\t');
         ui->plainTextEdit->appendPlainText("cur select node is " + nodeName);
-        std::vector<std::string> topicList = m_nodeclass.getTopicList(nodeName.toStdString());
+        std::vector<std::string> topicList = m_nodeclass->getTopicList(nodeName.toStdString());
 
         int count = topicList.size();
         if (count > INIT_TOPIC_COUNT)
@@ -189,12 +195,12 @@ void Widget::onSubBtnClicked()
 
     if (btn->text().compare("Start", Qt::CaseInsensitive) == 0)
     {
-        m_nodeclass.startNode();
+        m_nodeclass->getSubNode()->startNode();
         btn->setText("Stop");
     }
     else
     {
-        m_nodeclass.stopNode();
+        m_nodeclass->getSubNode()->stopNode();
         btn->setText("Start");
     }
 
@@ -273,16 +279,6 @@ void Widget::initTable()
     m_dataTableView->setColumnWidth(2, 200);
 }
 
-Widget::~Widget()
-{
-    if (m_spinThread)
-    {
-        m_nodeclass.getExecutor()->cancel();
-        m_spinThread->quit();
-        m_spinThread->wait();
-    }
-    delete ui;
-}
 /*
 void Widget::on_label_linkActivated(const QString &link)
 {

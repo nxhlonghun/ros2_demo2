@@ -1,22 +1,54 @@
 #include "demo_cpp_qt2/RosNodeClass.hpp"
 
-RosNodeClass::RosNodeClass()
+RosNodeClass::RosNodeClass(QObject *parent) : QObject(parent), spinning_(false)
 {
-    m_executor = new rclcpp::executors::SingleThreadedExecutor();
-
     options.use_intra_process_comms(true);
-
-    m_subNode = make_shared<SysSub>("system_sub_node", options);
+    m_executor = new rclcpp::executors::SingleThreadedExecutor();
+    m_mapSubNode = make_shared<SystemSub::MapSub>("map_sub_node");
+    m_subNode = make_shared<SystemSub::NodeListSub>("system_sub_node", options);
     m_pubNode = make_shared<SysNode>("system_pub_node", options);
-    // m_rosNode = rclcpp::Node::make_shared("rviz_node");
-
-    m_executor->add_node(m_subNode->get_node_base_interface());
-    m_executor->add_node(m_pubNode);
 }
 
-SysSub *RosNodeClass::getSubNode()
+SystemSub::NodeListSub *RosNodeClass::getSubNode()
 {
     return m_subNode.get();
+}
+
+void RosNodeClass::startNode()
+{
+    m_executor->add_node(m_mapSubNode);
+    m_executor->add_node(m_subNode->get_node_base_interface());
+    m_executor->add_node(m_pubNode);
+    if (spinning_)
+    {
+        return;
+    }
+    spinning_ = true;
+    spin_thread_ = std::thread([this]()
+                               { this->runExecutor(); });
+}
+void RosNodeClass::stopNode()
+{
+    if (!spinning_)
+    {
+        return;
+    }
+    spinning_ = false;
+    m_executor->cancel();
+    if (spin_thread_.joinable())
+    {
+        spin_thread_.join();
+    }
+}
+
+void RosNodeClass::runExecutor()
+{
+    // 简单的循环 spin_some，直到 spinning_ 标志为 false 或 rclcpp 关闭
+    while (spinning_ && rclcpp::ok())
+    {
+        m_executor->spin_some(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(10ms);
+    }
 }
 
 std::vector<std::string> RosNodeClass::getTopicList(string nodename_)
@@ -57,15 +89,6 @@ std::vector<std::string> RosNodeClass::getTopicList(string nodename_)
         sub_topics.push_back(topic_list);
     }
     return sub_topics;
-}
-
-void RosNodeClass::startNode()
-{
-    m_subNode->startNode();
-}
-void RosNodeClass::stopNode()
-{
-    m_subNode->stopNode();
 }
 
 std::vector<std::string> RosNodeClass::getNodeList()

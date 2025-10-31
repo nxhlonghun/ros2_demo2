@@ -1,6 +1,6 @@
 #include "demo_cpp_qt2/RosSpinThread.hpp"
 
-RosSpinThread::RosSpinThread(rclcpp::executors::SingleThreadedExecutor *executor, QObject *parent = nullptr)
+RosSpinThread::RosSpinThread(rclcpp::executors::SingleThreadedExecutor *executor, QObject *parent)
     : QThread(parent), m_executor(executor)
 {
 }

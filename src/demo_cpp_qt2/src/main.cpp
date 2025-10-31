@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
     spin_thread.detach();*/
     w.show();
     app.exec();
+    w.m_nodeclass->stopNode();
     rclcpp::shutdown();
     return 0;
 }
