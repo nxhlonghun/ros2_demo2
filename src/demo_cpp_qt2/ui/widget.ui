@@ -13,10 +13,17 @@
   <property name="windowTitle">
    <string>Widget</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_4" columnstretch="1,3">
+  <layout class="QGridLayout" name="gridLayout_4" columnstretch="1,0">
    <item row="0" column="0">
-    <layout class="QGridLayout" name="gridLayout">
+    <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,1">
      <item row="1" column="0">
+      <widget class="QPushButton" name="loadNodeFromFileBtn">
+       <property name="text">
+        <string>loadNodeFromFile</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
       <widget class="QTreeWidget" name="treeWidget">
        <column>
         <property name="text">
@@ -28,9 +35,12 @@
      <item row="0" column="0">
       <widget class="QPushButton" name="refreshNodeBtn">
        <property name="text">
-        <string>RefreshNode</string>
+        <string>refreshOnlineNode</string>
        </property>
       </widget>
+     </item>
+     <item row="3" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout"/>
      </item>
     </layout>
    </item>

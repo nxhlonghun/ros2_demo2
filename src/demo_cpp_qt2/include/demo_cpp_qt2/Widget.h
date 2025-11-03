@@ -12,12 +12,19 @@
 #include <QFile>
 #include <QMutex>
 #include <QPainter>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QToolButton>
+#include <QDateTime>
 // #include <rviz_common/render_panel.hpp>
 // #include <rviz_common/visualization_manager.hpp>
 // #include <rviz_common/display.hpp>
 
 // #include "demo_cpp_qt2/RosSpinThread.hpp"
 #include "demo_cpp_qt2/RosNodeClass.hpp"
+#include "demo_cpp_qt2/CommonClass.h"
+#include "demo_cpp_qt2/MapWidget.hpp"
+#include "AlgoGraphicViewImageViewList.h"
 
 using namespace std;
 
@@ -27,6 +34,8 @@ namespace Ui
     class Widget;
 }
 QT_END_NAMESPACE
+
+class AlgoGraphicViewImageViewList;
 
 class Widget : public QWidget
 {
@@ -38,20 +47,16 @@ public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
     RosNodeClass *m_nodeclass = nullptr;
-    bool loadMapFromFiles(const QString &pgmFiile, const QString &yamlFile);
+    MapWidget *map = nullptr;
 private slots:
 
+    void onLoadNodeFromFileBtnClicked();
     void onRefreshNodeBtnClicked();
     void onCustomContextMenu(const QPoint &point);
     void onCollispeNode();
     void onExpandNode();
     void onGetTopicList();
     void onSubBtnClicked();
-
-    void onPoseUpdated(double x, double y, double yaw);
-    void onLaserUpdated(const QVector<QPointF> &points); // points in robot frame
-    void onOccupancyGridUpdated(const QVector<int> &data, unsigned int width, unsigned int height,
-                                double resolution, double origin_x, double origin_y, double origin_theta);
 
     // void PB_clicked();
 
@@ -66,23 +71,8 @@ private:
     rclcpp::Clock::SharedPtr m_clock;
     // std::shared_ptr<rviz_common::ros_integration::RosNodeAbstraction> m_rosNodeAbstraction;
 
-    QPoint worldToImage(double wx, double wy) const;
-    QPointF robotLocalToWorld(double lx, double ly) const;
-    QImage baseMap_;
-    double map_resolution_{0.05};
-    double map_origin_x_{0.0}, map_origin_y_{0.0}, map_origin_theta_{0.0};
-    double robot_x_{0.0}, robot_y_{0.0}, robot_yaw_{0.0};
-    QVector<QPointF> laser_points_robot_;
-    QVector<int> occupancy_data_;
-    unsigned int occ_width_{0}, occ_height_{0};
-    double occ_resolution_{0};
-    double occ_origin_x_{0}, occ_origin_y_{0}, occ_origin_theta_{0};
-    QImage occ_image_; // 用于渲染的灰度图像
+    AlgoGraphicViewImageViewList *m_imageViewList = nullptr;
 
-    mutable QMutex mutex_;
-
-protected:
-    void paintEvent(QPaintEvent *event) override;
 signals:
     void PB_node_start();
     void PB_node_stop();
@@ -94,6 +84,9 @@ private:
     QMenu *m_menu = nullptr;
     QTableView *m_dataTableView = nullptr;
     QStandardItemModel *m_dataTableModel = nullptr;
+
+    QJsonObject m_nodeObj;
+    QJsonArray m_nodeArray;
 
     std::vector<std::string> list(std::vector<std::string> list);
     Ui::Widget *ui;

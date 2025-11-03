@@ -26,6 +26,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 file(GLOB PRO_FORM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ui/*.ui)
 file(GLOB_RECURSE PRO_INCLUDE_DIR RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/*.hpp *.h )
+file(GLOB_RECURSE SRC_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #set(CMAKE_AUTOMOC ON)
@@ -47,7 +48,9 @@ add_executable(main
       src/SystemSub.cpp
       src/RosNodeClass.cpp
       src/RosSpinThread.cpp
-      ${PRO_FORM_DIR} ${QT_UI_HPP} ${PRO_INCLUDE_DIR} ${QT_MOC_HPP}
+      src/CommonClass.cpp 
+      src/MapWidget.cpp
+      ${PRO_FORM_DIR} ${QT_UI_HPP} ${PRO_INCLUDE_DIR} ${QT_MOC_HPP} ${SRC_FILES}
 )
 
 ament_target_dependencies(main 
@@ -70,6 +73,10 @@ target_link_libraries(main Qt6::Widgets )
 #target_include_directories(sys_sub_dispaly PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 #target_link_libraries(widget Qt6::Widgets Qt6::Core Qt6::Gui)
 #target_include_directories(widget PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+target_include_directories(main PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/GraphicView
+)
 
 install(TARGETS main
   DESTINATION lib/${PROJECT_NAME}
