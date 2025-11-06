@@ -24,7 +24,6 @@
 #include "demo_cpp_qt2/RosNodeClass.hpp"
 #include "demo_cpp_qt2/CommonClass.h"
 #include "demo_cpp_qt2/MapWidget.hpp"
-#include "AlgoGraphicViewImageViewList.h"
 
 using namespace std;
 

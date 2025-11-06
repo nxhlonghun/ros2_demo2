@@ -1,11 +1,35 @@
 #include "demo_cpp_qt2/MapWidget.hpp"
 
-MapWidget::MapWidget(QLabel *displayLabel, QWidget *parent) : QWidget(parent), mapLabel(displayLabel)
+MapWidget::MapWidget(QGraphicsView *displayLabel, QWidget *parent) : QWidget(parent), mapView(displayLabel)
 {
+    mapScence = new QGraphicsScene(this);
+    mapView->setScene(mapScence);
+    mapPixmapItem = mapScence->addPixmap(QPixmap());
+    mapPixmapItem->setTransformationMode(Qt::SmoothTransformation); // 缩放平滑
+    mapPixmapItem->setFlags(QGraphicsItem::ItemIsMovable);          // 可拖动
     QString defaultPgm = "/home/nxh/map.pgm";
     QString defaultYaml = "/home/nxh/map.yaml";
     loadMapFromFiles(defaultPgm, defaultYaml);
 }
+
+void MapWidget::wheelEvent(QWheelEvent *event)
+{
+    constexpr double scaleFactor = 1.15;
+    if (event->angleDelta().y() > 0) // 向前滚轮放大
+        mapScale_ *= scaleFactor;
+    else // 向后滚轮缩小
+        mapScale_ /= scaleFactor;
+
+    // 限制缩放范围
+    mapScale_ = qBound(0.1, mapScale_, 10.0);
+
+    QTransform t;
+    t.scale(mapScale_, mapScale_);
+    mapView->setTransform(t);
+
+    event->accept();
+}
+
 bool MapWidget::loadMapFromFiles(const QString &pgmFile, const QString &yamlFile)
 {
     QImage img;
@@ -152,23 +176,37 @@ void MapWidget::onOccupancyGridUpdated(const QVector<int> &data, unsigned int wi
     occupancy_data_ = data;
 
     // build visual image (grayscale mapping)
-    occ_image_ = QImage(occ_width_, occ_height_, QImage::Format_Grayscale8);
+    occ_image_ = QImage(occ_width_, occ_height_, QImage::Format_ARGB32);
     for (unsigned int y = 0; y < occ_height_; ++y)
     {
         for (unsigned int x = 0; x < occ_width_; ++x)
         {
             int idx = y * occ_width_ + x;
             int v = occupancy_data_.at(idx); // -1 unknown, 0 free, 100 occ
-            int gray = 255;
+            QColor color;
             if (v == -1)
-                gray = 200; // unknown -> light gray
+            {
+                color = QColor(0, 0, 255, 100); // unknown -> light gray
+            }
+            else if (v == 0)
+            {
+                color = QColor(255, 255, 255, 0);
+            }
+            else if (v == 100)
+            {
+                color = QColor(255, 0, 0, 255);
+            }
             else
             {
                 // map 0..100 to 255..0
-                int gv = static_cast<int>(255 - (v * 255 / 100));
-                gray = qBound(0, gv, 255);
+                int r = v * 255 / 100;
+                int g = 255 - (v * 128 / 100);
+                int b = 255 - r;
+                // int gv = static_cast<int>(255 - (v * 255 / 100));
+                // gray = qBound(0, gv, 255);
+                color = QColor(r, g, b, 255);
             }
-            occ_image_.setPixel(x, occ_height_ - 1 - y, qRgb(gray, gray, gray)); // invert y for display match
+            occ_image_.setPixelColor(x, occ_height_ - 1 - y, color); // invert y for display match
         }
     }
 
@@ -178,29 +216,49 @@ void MapWidget::onOccupancyGridUpdated(const QVector<int> &data, unsigned int wi
 void MapWidget::paintEvent(QPaintEvent * /*event*/)
 {
     // 1. 创建一个 QPixmap，用来保存绘制的图像
-    QPixmap pixmap(mapLabel->size()); // 设置 pixmap 的大小和 QLabel 一致
-    pixmap.fill(Qt::black);           // 填充背景色为黑色
+    QPixmap pixmap(mapView->viewport()->size()); // 设置 pixmap 的大小和 QLabel 一致
+    pixmap.fill(Qt::black);                      // 填充背景色为黑色
 
     // 2. 使用 QPainter 绘制内容
     QPainter p(&pixmap);
-    p.fillRect(pixmap.rect(), Qt::black); // 确保背景为黑色
+    // p.fillRect(pixmap.rect(), Qt::black); // 确保背景为黑色
+    // mapScence->clear();
 
     QMutexLocker locker(&mutex_);
 
     // 如果存在底图则按底图坐标绘制
     if (!baseMap_.isNull())
     {
-        QImage scaledMap = baseMap_.scaled(mapLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        QImage scaledMap = baseMap_.scaled(mapView->viewport()->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
         // 将底图居中绘制到 widget 上（也可以选择左上角(0,0)）
-        int x0 = (mapLabel->width() - scaledMap.width()) / 2;
-        int y0 = (mapLabel->height() - scaledMap.height()) / 2;
+        int x0 = (mapView->viewport()->width() - scaledMap.width()) / 2;
+        int y0 = (mapView->viewport()->height() - scaledMap.height()) / 2;
         p.drawImage(x0, y0, scaledMap);
+        double scaleX = double(scaledMap.width()) / double(baseMap_.width());
+        double scaleY = double(scaledMap.height()) / double(baseMap_.height());
 
         // 如果存在占据栅格图像（例如膨胀/代价值图层），则以半透明叠加绘制
         if (!occ_image_.isNull())
         {
+            double sx = occ_resolution_ / map_resolution_ * scaleX;
+            double sy = occ_resolution_ / map_resolution_ * scaleY;
+
+            QImage occ_scaled = occ_image_.scaled(
+                occ_image_.width() * sx,
+                occ_image_.height() * sy,
+                Qt::IgnoreAspectRatio,
+                Qt::SmoothTransformation);
+
+            // 将局部地图的原点转换到全局像素坐标
+            QPoint robot_img = worldToImage(robot_x_, robot_y_);
+            int draw_x = x0 + robot_img.x() * scaleX - occ_scaled.width() / 2;
+            int draw_y = y0 + robot_img.y() * scaleY - occ_scaled.height() / 2;
+
+            p.setOpacity(0.5);
+            p.drawImage(draw_x, draw_y, occ_scaled);
+            p.setOpacity(1.0);
             // 简单处理：若两者尺寸相同直接叠加，否则把 occ 缩放到底图尺寸（注意：缩放会失真，真实场景需按 origin/resolution 做精确对齐）
-            if (occ_image_.size() == baseMap_.size())
+            /*if (occ_image_.size() == scaledMap.size())
             {
                 p.setOpacity(0.5);
                 p.drawImage(x0, y0, occ_image_);
@@ -208,26 +266,25 @@ void MapWidget::paintEvent(QPaintEvent * /*event*/)
             }
             else
             {
-                QImage occ_scaled = occ_image_.scaled(baseMap_.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+                QImage occ_scaled = occ_image_.scaled(scaledMap.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
                 p.setOpacity(0.5);
                 p.drawImage(x0, y0, occ_scaled);
                 p.setOpacity(1.0);
-            }
+            }*/
         }
-
         // 绘制激光点：先做机器人局部->世界，再 world->image，最后加上 x0,y0 偏移
         p.setPen(Qt::green);
         for (const QPointF &pt_local : laser_points_robot_)
         {
             QPointF world_pt = robotLocalToWorld(pt_local.x(), pt_local.y());
             QPoint img_pt = worldToImage(world_pt.x(), world_pt.y());
-            QPoint final_pt(img_pt.x() + x0, img_pt.y() + y0);
+            QPoint final_pt(img_pt.x() * scaleX + 0.5 + x0, img_pt.y() * scaleY + 0.5 + y0);
             p.drawPoint(final_pt);
         }
 
         // 绘制机器人（用旋转的三角形表示朝向）
         QPoint robot_img = worldToImage(robot_x_, robot_y_);
-        QPoint robot_center(robot_img.x() + x0, robot_img.y() + y0);
+        QPoint robot_center(robot_img.x() * scaleX + 0.5 + x0, robot_img.y() * scaleY + 0.5 + y0);
 
         p.save();
         p.translate(robot_center);
@@ -250,6 +307,6 @@ void MapWidget::paintEvent(QPaintEvent * /*event*/)
             p.drawPoint(final);
         }*/
     }
-    mapLabel->setPixmap(pixmap);
-    mapLabel->setScaledContents(true); // 如果需要，设置为自动缩放以适应大小 mapLabel->setPixmap(pixmap);
+    mapPixmapItem->setPixmap(pixmap);
+    // mapView->fitInView(mapScence->itemsBoundingRect(), Qt::KeepAspectRatio); // 如果需要，设置为自动缩放以适应大小 mapLabel->setPixmap(pixmap);
 }

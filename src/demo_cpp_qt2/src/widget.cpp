@@ -10,7 +10,7 @@ Widget::Widget(QWidget *parent)
 
     m_imageViewList = new AlgoGraphicViewImageViewList();
     m_imageViewList->SetViewCount(2);
-    ui->verticalLayout->addWidget(m_imageViewList);
+    // ui->verticalLayout->addWidget(m_imageViewList);
 
     initTable();
     // initRvizWidget();
@@ -27,7 +27,7 @@ Widget::Widget(QWidget *parent)
     connect(ui->loadNodeFromFileBtn, SIGNAL(clicked()), this, SLOT(onLoadNodeFromFileBtnClicked()));
 
     connect(m_nodeclass->getSubNodeList(), &SystemSub::NodeListSub::sendmsg, this, &Widget::onRecv, Qt::QueuedConnection);
-    map = new MapWidget(ui->mapLabel, this);
+    map = new MapWidget(ui->mapView, this);
     connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::poseUpDate,
             map, &MapWidget::getPoseUpdated, Qt::QueuedConnection);
     connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::laserUpDate,

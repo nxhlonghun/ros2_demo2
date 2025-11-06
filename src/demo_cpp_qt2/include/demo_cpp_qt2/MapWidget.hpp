@@ -8,12 +8,13 @@
 #include <QFile>
 #include <QMutex>
 #include <QPainter>
+#include "AlgoGraphicViewImageViewList.h"
 
 class MapWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MapWidget(QLabel *mapLabel = nullptr, QWidget *parent = nullptr);
+    explicit MapWidget(QGraphicsView *mapView = nullptr, QWidget *parent = nullptr);
     bool loadMapFromFiles(const QString &pgmFiile, const QString &yamlFile);
     void getPoseUpdated(double x, double y, double yaw) { onPoseUpdated(x, y, yaw); }
     void getLaserUpdated(const QVector<QPointF> &points) { onLaserUpdated(points); }
@@ -31,12 +32,17 @@ private slots:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
 
 private:
     QPoint worldToImage(double wx, double wy) const;
     QPointF robotLocalToWorld(double lx, double ly) const;
 
-    QLabel *mapLabel;
+    QGraphicsView *mapView;
+    QGraphicsScene *mapScence;
+    QGraphicsPixmapItem *mapPixmapItem = nullptr;
+
+    double mapScale_ = 1.0;
     QImage baseMap_;
     double map_resolution_{0.05};
     double map_origin_x_{0.0}, map_origin_y_{0.0}, map_origin_theta_{0.0};
