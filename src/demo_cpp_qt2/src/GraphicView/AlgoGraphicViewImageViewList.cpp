@@ -202,6 +202,7 @@ QPointF AlgoGraphicViewImageViewList::getCurrentViewCenter(int CamNum)
         return QPointF(0, 0);
     return ViewList[CamNum - 1]->getCurrentViewCenter();
 }
+
 void AlgoGraphicViewImageViewList::deleteLastItem(int CamNum)
 {
     if (CamNum < 1 || CamNum > ViewList.size())

@@ -13,16 +13,26 @@
   <property name="windowTitle">
    <string>Widget</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_4" columnstretch="1,2">
-   <item row="0" column="0">
-    <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0">
+  <layout class="QGridLayout" name="gridLayout_4" columnstretch="1,3">
+   <item row="0" column="1">
+    <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,1">
      <item row="0" column="0">
-      <widget class="QPushButton" name="refreshNodeBtn">
-       <property name="text">
-        <string>refreshOnlineNode</string>
-       </property>
-      </widget>
+      <layout class="QGridLayout" name="tableGridLayout"/>
      </item>
+     <item row="1" column="0">
+      <layout class="QGridLayout" name="gridLayout_2" rowstretch="0" columnstretch="5,2">
+       <item row="0" column="1">
+        <widget class="QPlainTextEdit" name="plainTextEdit"/>
+       </item>
+       <item row="0" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout" rowstretch="1,1,1,1">
      <item row="1" column="0">
       <widget class="QPushButton" name="loadNodeFromFileBtn">
        <property name="text">
@@ -30,7 +40,14 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
+     <item row="0" column="0">
+      <widget class="QPushButton" name="refreshNodeBtn">
+       <property name="text">
+        <string>refreshOnlineNode</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" rowspan="2">
       <widget class="QTreeWidget" name="treeWidget">
        <column>
         <property name="text">
@@ -38,26 +55,6 @@
         </property>
        </column>
       </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="0" column="1">
-    <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,1">
-     <item row="0" column="0">
-      <layout class="QGridLayout" name="tableGridLayout"/>
-     </item>
-     <item row="1" column="0">
-      <layout class="QGridLayout" name="gridLayout_2" rowstretch="0" columnstretch="5,5,1">
-       <item row="0" column="2">
-        <widget class="QPlainTextEdit" name="plainTextEdit"/>
-       </item>
-       <item row="0" column="1">
-        <widget class="QGraphicsView" name="mapView"/>
-       </item>
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="MapView"/>
-       </item>
-      </layout>
      </item>
     </layout>
    </item>

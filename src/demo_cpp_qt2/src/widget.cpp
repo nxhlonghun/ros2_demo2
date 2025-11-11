@@ -9,8 +9,8 @@ Widget::Widget(QWidget *parent)
     ui->setupUi(this);
 
     m_imageViewList = new AlgoGraphicViewImageViewList();
-    m_imageViewList->SetViewCount(2);
-    // ui->verticalLayout->addWidget(m_imageViewList);
+    m_imageViewList->SetViewCount(1);
+    ui->verticalLayout->addWidget(m_imageViewList);
 
     initTable();
     // initRvizWidget();
@@ -27,13 +27,20 @@ Widget::Widget(QWidget *parent)
     connect(ui->loadNodeFromFileBtn, SIGNAL(clicked()), this, SLOT(onLoadNodeFromFileBtnClicked()));
 
     connect(m_nodeclass->getSubNodeList(), &SystemSub::NodeListSub::sendmsg, this, &Widget::onRecv, Qt::QueuedConnection);
-    map = new MapWidget(ui->mapView, this);
+    // map = new MapWidget(ui->mapView, this);
+    map = new MapWidget(m_imageViewList);
     connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::poseUpDate,
             map, &MapWidget::getPoseUpdated, Qt::QueuedConnection);
     connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::laserUpDate,
             map, &MapWidget::getLaserUpdated, Qt::QueuedConnection);
-    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::occupancyGridUpDate,
-            map, &MapWidget::getOccupancyGridUpdated, Qt::QueuedConnection);
+    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::occupancyLocalGridUpDate,
+            map, &MapWidget::getOccupancyLocalGridUpdated, Qt::QueuedConnection);
+    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::occupancyGlobalGridUpDate,
+            map, &MapWidget::getOccupancyGlobalGridUpdated, Qt::QueuedConnection);
+
+    connect(map, &MapWidget::pixMapUpdate, this, [this](QImage pixmap_)
+            { m_imageViewList->DispImage(1, pixmap_); }, Qt::QueuedConnection);
+    // m_imageViewList->DispImage(1, map->pixmap_);
     m_nodeclass->startNode();
 }
 

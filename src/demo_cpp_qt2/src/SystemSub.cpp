@@ -47,8 +47,7 @@ void SystemSub::NodeListSub::startNode()
     // 节点初始状态进入活动状态
     RCLCPP_INFO(this->get_logger(), "节点初始状态进入活动状态");
     this->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
-
-    rclcpp_lifecycle::State state = this->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+    this->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
 }
 void SystemSub::NodeListSub::stopNode()
 {
@@ -59,12 +58,26 @@ void SystemSub::NodeListSub::stopNode()
     this->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CLEANUP);
     // this->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_UNCONFIGURED_SHUTDOWN);
 }
+void SystemSub::NodeListSub::deactivateNode()
+{
+    // 节点从活动状态返回初始状态
+    RCLCPP_INFO(this->get_logger(), "销毁节点");
+
+    this->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
+    this->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CLEANUP);
+    this->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_UNCONFIGURED_SHUTDOWN);
+    // this->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_UNCONFIGURED_SHUTDOWN);
+}
 
 SystemSub::MapSub::MapSub(const string &node_name, QObject *parent) : QObject(parent), rclcpp::Node(node_name)
 {
     qRegisterMetaType<QVector<QPointF>>("QVector<QPointF>");
     qRegisterMetaType<QVector<int>>("QVector<int>");
 
+    // amcl
+    initial_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+        "/initialpose", 10);
+    // 里程计
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
         "/odom", 10,
         std::bind(&SystemSub::MapSub::odomCallback, this, std::placeholders::_1));
@@ -75,15 +88,53 @@ SystemSub::MapSub::MapSub(const string &node_name, QObject *parent) : QObject(pa
         std::bind(&SystemSub::MapSub::laserCallback, this, std::placeholders::_1));
 
     // 占据栅格（例如局部 costmap）
-    occupancy_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
+    local_occupancy_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
         "/local_costmap/costmap", 1,
-        std::bind(&SystemSub::MapSub::occupancyCallback, this, std::placeholders::_1));
+        std::bind(&SystemSub::MapSub::occupancyLocalCallback, this, std::placeholders::_1));
+
+    global_occupancy_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
+        "/global_costmap/costmap", 1,
+        std::bind(&SystemSub::MapSub::occupancyGlobalCallback, this, std::placeholders::_1));
 }
+
+void SystemSub::MapSub::initializeAMCL(double x, double y, double yaw)
+{
+    if (amcl_initialized_)
+        return; // 只初始化一次
+
+    geometry_msgs::msg::PoseWithCovarianceStamped msg;
+    msg.header.stamp = this->get_clock()->now();
+    msg.header.frame_id = "map"; // AMCL 工作在 map 坐标系
+
+    msg.pose.pose.position.x = x;
+    msg.pose.pose.position.y = y;
+    msg.pose.pose.position.z = 0.0;
+
+    tf2::Quaternion q;
+    q.setRPY(0, 0, yaw);
+    msg.pose.pose.orientation.x = q.x();
+    msg.pose.pose.orientation.y = q.y();
+    msg.pose.pose.orientation.z = q.z();
+    msg.pose.pose.orientation.w = q.w();
+
+    // 设置协方差矩阵，小值表示置信度高
+    for (int i = 0; i < 36; i++)
+        msg.pose.covariance[i] = 0.0;
+    msg.pose.covariance[0] = 0.01;  // x
+    msg.pose.covariance[7] = 0.01;  // y
+    msg.pose.covariance[35] = 0.01; // yaw
+
+    initial_pose_pub_->publish(msg);
+    RCLCPP_INFO(this->get_logger(), "AMCL initialized at x=%.2f y=%.2f yaw=%.2f", x, y, yaw);
+
+    amcl_initialized_ = true;
+}
+
 void SystemSub::MapSub::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
     // 从里程计消息中读取位置与朝向（四元数转 yaw）
-    double x = msg->pose.pose.position.x;
-    double y = msg->pose.pose.position.y;
+    double x = msg->pose.pose.position.x + 0.1;
+    double y = msg->pose.pose.position.y + 0.1;
 
     tf2::Quaternion q(msg->pose.pose.orientation.x,
                       msg->pose.pose.orientation.y,
@@ -94,6 +145,7 @@ void SystemSub::MapSub::odomCallback(const nav_msgs::msg::Odometry::SharedPtr ms
     m.getRPY(roll, pitch, yaw);
 
     // 发出 Qt 信号（GUI 端会用 queued connection 接收）
+    initializeAMCL(x, y, yaw); // 初始化AMCL位姿
     emit poseUpDate(x, y, yaw);
 }
 
@@ -119,7 +171,7 @@ void SystemSub::MapSub::laserCallback(const sensor_msgs::msg::LaserScan::SharedP
     emit laserUpDate(pts);
 }
 
-void SystemSub::MapSub::occupancyCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
+void SystemSub::MapSub::occupancyLocalCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
 {
     // 读取占据栅格的元信息与数据，然后发出信号给 UI
     unsigned int w = msg->info.width;
@@ -146,5 +198,34 @@ void SystemSub::MapSub::occupancyCallback(const nav_msgs::msg::OccupancyGrid::Sh
     {
         data[i] = static_cast<int>(msg->data[i]); // -1 表示未知, 0 表示空地, 100 表示占据
     }
-    emit occupancyGridUpDate(data, w, h, res, ox, oy, otheta);
+    emit occupancyLocalGridUpDate(data, w, h, res, ox, oy, otheta);
+}
+void SystemSub::MapSub::occupancyGlobalCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
+{
+    // 读取占据栅格的元信息与数据，然后发出信号给 UI
+    unsigned int w = msg->info.width;
+    unsigned int h = msg->info.height;
+    double res = msg->info.resolution;
+    double ox = msg->info.origin.position.x;
+    double oy = msg->info.origin.position.y;
+    double otheta = 0.0;
+    // origin 可能有旋转，这里把 orientation 转为 yaw
+    {
+        tf2::Quaternion q(msg->info.origin.orientation.x,
+                          msg->info.origin.orientation.y,
+                          msg->info.origin.orientation.z,
+                          msg->info.origin.orientation.w);
+        tf2::Matrix3x3 m(q);
+        double roll, pitch, yaw;
+        m.getRPY(roll, pitch, yaw);
+        otheta = yaw;
+    }
+
+    QVector<int> data;
+    data.resize(w * h);
+    for (size_t i = 0; i < msg->data.size(); ++i)
+    {
+        data[i] = static_cast<int>(msg->data[i]); // -1 表示未知, 0 表示空地, 100 表示占据
+    }
+    emit occupancyGlobalGridUpDate(data, w, h, res, ox, oy, otheta);
 }

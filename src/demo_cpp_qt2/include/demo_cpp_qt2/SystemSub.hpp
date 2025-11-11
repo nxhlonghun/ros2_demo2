@@ -1,14 +1,18 @@
 #ifndef SYS_SUB_NODE_HPP
 #define SYS_SUB_NODE_HPP
 
+#include <chrono>
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "demo_interface/msg/system.hpp"
 #include <sensor_msgs/msg/laser_scan.hpp>
+// #include <geometry_msgs/msg/transform_stamped.hpp>
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <tf2/LinearMath/Quaternion.hpp>
 #include <tf2/LinearMath/Matrix3x3.hpp>
+#include <tf2_ros/transform_broadcaster.h>
 
 #include <iostream>
 #include <string>
@@ -39,6 +43,8 @@ namespace SystemSub
         NodeListSub(const string &node_name, const rclcpp::NodeOptions &options, QObject *parent = nullptr);
         void startNode();
         void stopNode();
+        void deactivateNode();
+
     signals:
         void sendmsg(const QString &qmsg);
 
@@ -56,11 +62,17 @@ namespace SystemSub
     private:
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
-        rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr occupancy_sub_;
+        rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr local_occupancy_sub_;
+        rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr global_occupancy_sub_;
+        rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_pub_;
+        bool amcl_initialized_ = false;
+        
 
         void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
         void laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
-        void occupancyCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
+        void occupancyLocalCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
+        void occupancyGlobalCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
+        void initializeAMCL(double x, double y, double yaw);
 
     public:
         MapSub(const string &node_name, QObject *parent = nullptr);
@@ -69,7 +81,8 @@ namespace SystemSub
     signals:
         void poseUpDate(double x, double y, double yaw);
         void laserUpDate(const QVector<QPointF> &points);
-        void occupancyGridUpDate(const QVector<int> &data, unsigned int width, unsigned int height, double resolution, double origin_x, double origin_y, double origin_theta);
+        void occupancyLocalGridUpDate(const QVector<int> &data, unsigned int width, unsigned int height, double resolution, double origin_x, double origin_y, double origin_theta);
+        void occupancyGlobalGridUpDate(const QVector<int> &data, unsigned int width, unsigned int height, double resolution, double origin_x, double origin_y, double origin_theta);
 
         /*protected:
             CallbackReturn on_activate(const rclcpp_lifecycle::State &state) override;
