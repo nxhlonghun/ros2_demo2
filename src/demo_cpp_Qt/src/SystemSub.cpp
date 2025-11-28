@@ -21,7 +21,7 @@ namespace SystemSub
                     10,
                     bind(&SystemSub::NodeSub::NodeListSub::response_callback, this, placeholders::_1));
             }
-            RCLCPP_INFO(this->get_logger(), "SysSub::on_configure() is called.");
+            RCLCPP_INFO(this->get_logger(), " SysSub::on_configure() is called.");
             LifecycleNode::on_configure(state);
             return CallbackReturn::SUCCESS;
         }
