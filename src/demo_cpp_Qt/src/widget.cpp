@@ -1,5 +1,5 @@
 #include "ui_widget.h"
-#include "demo_cpp_qt2/Widget.h"
+#include "demo_cpp_Qt/Widget.h"
 #define TABLE_COL_COUNT 6
 #define INIT_TOPIC_COUNT 16
 

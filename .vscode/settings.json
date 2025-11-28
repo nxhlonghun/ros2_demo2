@@ -5,5 +5,6 @@
     "editor.defaultFormatter": "ms-vscode.cpptools"
   },
   "cmake.sourceDirectory": "/home/nxh/ros2_demo2/src/demo_coo_qt2",
-  "C_Cpp.default.compilerPath": "/usr/bin/gcc"
+  "C_Cpp.default.compilerPath": "/usr/bin/gcc",
+  "C_Cpp.errorSquiggles": "disabled"
 }

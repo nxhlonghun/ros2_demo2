@@ -21,9 +21,9 @@
 // #include <rviz_common/display.hpp>
 
 // #include "demo_cpp_qt2/RosSpinThread.hpp"
-#include "demo_cpp_qt2/RosNodeClass.hpp"
-#include "demo_cpp_qt2/CommonClass.h"
-#include "demo_cpp_qt2/MapWidget.hpp"
+#include "demo_cpp_Qt/RosNodeClass.hpp"
+#include "demo_cpp_Qt/CommonClass.h"
+#include "demo_cpp_Qt/MapWidget.hpp"
 
 using namespace std;
 

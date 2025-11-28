@@ -1,4 +1,4 @@
-#include "demo_cpp_qt2/MapWidget.hpp"
+#include "demo_cpp_Qt/MapWidget.hpp"
 
 MapWidget::MapWidget(AlgoGraphicViewImageViewList *parent, QPushButton *button)
     : AlgoGraphicViewImageViewList(parent)

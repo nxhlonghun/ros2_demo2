@@ -3,8 +3,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "demo_interface/msg/system.hpp"
-#include "demo_cpp_qt2/sys_node.hpp"
-#include "demo_cpp_qt2/SystemSub.hpp"
+#include "demo_cpp_Qt/sys_node.hpp"
+#include "demo_cpp_Qt/SystemSub.hpp"
 // #include <rviz_common/ros_integration/ros_node_abstraction.hpp>
 #include <QThread>
 #include <QTreeWidget>

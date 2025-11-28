@@ -1,4 +1,4 @@
-#include "demo_cpp_qt2/RosNodeClass.hpp"
+#include "demo_cpp_Qt/RosNodeClass.hpp"
 
 RosNodeClass::RosNodeClass(QObject *parent) : QObject(parent), spinning_(false)
 {

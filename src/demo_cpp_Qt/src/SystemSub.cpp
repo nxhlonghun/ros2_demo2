@@ -1,7 +1,7 @@
 #include <QApplication>
 #include <QLabel>
 #include <QString>
-#include "demo_cpp_qt2/SystemSub.hpp"
+#include "demo_cpp_Qt/SystemSub.hpp"
 
 SystemSub::NodeListSub::NodeListSub(const string &node_name, const rclcpp::NodeOptions &options, QObject *parent) : QObject(parent), rclcpp_lifecycle::LifecycleNode(node_name, options)
 {
