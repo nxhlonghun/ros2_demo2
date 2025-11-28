@@ -36,95 +36,108 @@ Q_DECLARE_METATYPE(QVector<int>)
 
 namespace SystemSub
 {
-
-    class NodeListSub : public QObject, public rclcpp_lifecycle::LifecycleNode
+    namespace NodeSub
     {
-        Q_OBJECT
-    private:
-        rclcpp::Subscription<system_msg>::SharedPtr subscriber_;
-        void response_callback(const system_msg::UniquePtr msg);
 
-        string msg;
-        stringstream show_str;
-        string topicName_;
+        class NodeListSub : public QObject, public rclcpp_lifecycle::LifecycleNode
+        {
+            Q_OBJECT
+        private:
+            rclcpp::Subscription<system_msg>::SharedPtr subscriber_;
+            void response_callback(const system_msg::UniquePtr msg);
 
-    public:
-        NodeListSub(const string &node_name, const rclcpp::NodeOptions &options, QObject *parent = nullptr);
-        void startNode(string topicName);
-        void stopNode(string topicName);
-        void deactivateNode(string topicName);
+            bool subscriber_flag_ = false;
+            string msg;
+            stringstream show_str;
+            string topicName_;
 
-    signals:
-        void sendmsg(const QString &qmsg);
+        public:
+            NodeListSub(const string &node_name, const rclcpp::NodeOptions &options, QObject *parent = nullptr);
+            void startNode(string topicName);
+            void stopNode(string topicName);
+            void deactivateNode(string topicName);
 
-    protected:
-        CallbackReturn on_activate(const rclcpp_lifecycle::State &state) override;
-        CallbackReturn on_deactivate(const rclcpp_lifecycle::State &state) override;
-        CallbackReturn on_configure(const rclcpp_lifecycle::State &state) override;
-        CallbackReturn on_shutdown(const rclcpp_lifecycle::State &state) override;
-        CallbackReturn on_cleanup(const rclcpp_lifecycle::State &state) override;
-    };
+        signals:
+            void sendmsg(const QString &qmsg);
 
-    class MapSub : public QObject, public rclcpp_lifecycle::LifecycleNode
+        protected:
+            CallbackReturn on_activate(const rclcpp_lifecycle::State &state) override;
+            CallbackReturn on_deactivate(const rclcpp_lifecycle::State &state) override;
+            CallbackReturn on_configure(const rclcpp_lifecycle::State &state) override;
+            CallbackReturn on_shutdown(const rclcpp_lifecycle::State &state) override;
+            CallbackReturn on_cleanup(const rclcpp_lifecycle::State &state) override;
+        };
+    }
+    namespace MapSub
     {
-        Q_OBJECT
-    private:
-        rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
-        rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
-        rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr local_occupancy_sub_;
-        rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr global_occupancy_sub_;
-        rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
-        rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr local_path_pub_;
-        rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr global_path_pub_;
-        rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_pub_;
-        rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_pub_;
-        bool amcl_initialized_ = false;
-        bool on_initialized_ = false;
-
-        void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
-        void laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
-        void occupancyLocalCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
-        void occupancyGlobalCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
-        void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
-        void localPathCallback(const nav_msgs::msg::Path::SharedPtr msg);
-        void globalPathCallback(const nav_msgs::msg::Path::SharedPtr msg);
-        void initializeAMCL(double x, double y, double yaw);
-
-    public:
-        MapSub(const string &node_name, QObject *parent = nullptr);
-        void getMousePress(double x, double y, double yaw)
+        class MapSub : public QObject, public rclcpp_lifecycle::LifecycleNode
         {
-            onmousePress(x, y, yaw);
-        }
-        void getInitializeAMCL(int flog)
-        {
-            onInitializeAMCL(flog);
-        }
+            Q_OBJECT
+        private:
+            rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+            rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
+            rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr local_occupancy_sub_;
+            rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr global_occupancy_sub_;
+            rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
+            rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr local_path_sub_;
+            rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr global_path_sub_;
+            rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_pub_;
+            rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_pub_;
+            bool amcl_initialized_ = false;
+            bool on_initialized_ = false;
+            bool odom_sub_flag_ = false;
+            bool laser_sub_flag_ = false;
+            bool local_occupancy_sub_flag_ = false;
+            bool global_occupancy_sub_flag_ = false;
+            bool map_sub_flag_ = false;
+            bool local_path_sub_flag_ = false;
+            bool global_path_sub_flag_ = false;
 
-        void startNode();
-        void stopNode();
-        void deactivateNode();
-        /*void startNode();
-        void stopNode();*/
-    signals:
-        void poseUpDate(double x, double y, double yaw);
-        void laserUpDate(const QVector<QPointF> &points);
-        void occupancyLocalGridUpDate(const QVector<int> &data, unsigned int width, unsigned int height, double resolution, double origin_x, double origin_y, double origin_theta);
-        void occupancyGlobalGridUpDate(const QVector<int> &data, unsigned int width, unsigned int height, double resolution, double origin_x, double origin_y, double origin_theta);
-        void localPathUpdated(const QVector<QPointF> &points);
-        void globalPathUpdated(const QVector<QPointF> &points);
-        void mapUpdated(const QVector<int> &data, unsigned int width, unsigned int height, double resolution, double origin_x, double origin_y, double origin_theta);
+            void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+            void laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
+            void occupancyLocalCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
+            void occupancyGlobalCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
+            void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
+            void localPathCallback(const nav_msgs::msg::Path::SharedPtr msg);
+            void globalPathCallback(const nav_msgs::msg::Path::SharedPtr msg);
+            void initializeAMCL(double x, double y, double yaw);
 
-    private slots:
-        void onmousePress(double x, double y, double yaw);
-        void onInitializeAMCL(int flog);
+        public:
+            MapSub(const string &node_name, QObject *parent = nullptr);
+            void getMousePress(double x, double y, double yaw)
+            {
+                onmousePress(x, y, yaw);
+            }
+            void getInitializeAMCL(int flog)
+            {
+                onInitializeAMCL(flog);
+            }
 
-    protected:
-        CallbackReturn on_activate(const rclcpp_lifecycle::State &state) override;
-        CallbackReturn on_deactivate(const rclcpp_lifecycle::State &state) override;
-        CallbackReturn on_configure(const rclcpp_lifecycle::State &state) override;
-        CallbackReturn on_shutdown(const rclcpp_lifecycle::State &state) override;
-        CallbackReturn on_cleanup(const rclcpp_lifecycle::State &state) override;
-    };
+            void startNode();
+            void stopNode();
+            void deactivateNode();
+            /*void startNode();
+            void stopNode();*/
+        signals:
+            void poseUpDate(double x, double y, double yaw);
+            void laserUpDate(const QVector<QPointF> &points);
+            void occupancyLocalGridUpDate(const QVector<int> &data, unsigned int width, unsigned int height, double resolution, double origin_x, double origin_y, double origin_theta);
+            void occupancyGlobalGridUpDate(const QVector<int> &data, unsigned int width, unsigned int height, double resolution, double origin_x, double origin_y, double origin_theta);
+            void localPathUpdated(const QVector<QPointF> &points);
+            void globalPathUpdated(const QVector<QPointF> &points);
+            void mapUpdated(const QVector<int> &data, unsigned int width, unsigned int height, double resolution, double origin_x, double origin_y, double origin_theta);
+
+        private slots:
+            void onmousePress(double x, double y, double yaw);
+            void onInitializeAMCL(int flog);
+
+        protected:
+            CallbackReturn on_activate(const rclcpp_lifecycle::State &state) override;
+            CallbackReturn on_deactivate(const rclcpp_lifecycle::State &state) override;
+            CallbackReturn on_configure(const rclcpp_lifecycle::State &state) override;
+            CallbackReturn on_shutdown(const rclcpp_lifecycle::State &state) override;
+            CallbackReturn on_cleanup(const rclcpp_lifecycle::State &state) override;
+        };
+    }
 }
 #endif

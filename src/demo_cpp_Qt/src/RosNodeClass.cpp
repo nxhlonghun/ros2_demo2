@@ -5,8 +5,8 @@ RosNodeClass::RosNodeClass(QObject *parent) : QObject(parent), spinning_(false)
     options.use_intra_process_comms(true);
     m_executor = new rclcpp::executors::SingleThreadedExecutor();
     m_node = make_shared<rclcpp::Node>("my_node");
-    m_mapSubNode = make_shared<SystemSub::MapSub>("map_sub_node");
-    m_subNodeList = make_shared<SystemSub::NodeListSub>("system_sub_node", options);
+    m_mapSubNode = make_shared<SystemSub::MapSub::MapSub>("map_sub_node");
+    m_subNodeList = make_shared<SystemSub::NodeSub::NodeListSub>("system_sub_node", options);
     m_pubNode = make_shared<SysNode>("system_pub_node", options);
 }
 
@@ -33,11 +33,11 @@ void RosNodeClass::StopNode(string nodeName, string topicName)
     }
 }
 
-SystemSub::NodeListSub *RosNodeClass::getSubNodeList()
+SystemSub::NodeSub::NodeListSub *RosNodeClass::getSubNodeList()
 {
     return m_subNodeList.get();
 }
-SystemSub::MapSub *RosNodeClass::getSubNodeMap()
+SystemSub::MapSub::MapSub *RosNodeClass::getSubNodeMap()
 {
     return m_mapSubNode.get();
 }

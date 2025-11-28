@@ -25,7 +25,7 @@ Widget::Widget(QWidget *parent)
     connect(ui->refreshNodeBtn, SIGNAL(clicked()), this, SLOT(onRefreshNodeBtnClicked()));
     connect(ui->loadNodeFromFileBtn, SIGNAL(clicked()), this, SLOT(onLoadNodeFromFileBtnClicked()));
 
-    connect(m_nodeclass->getSubNodeList(), &SystemSub::NodeListSub::sendmsg, this, &Widget::onRecv, Qt::QueuedConnection);
+    connect(m_nodeclass->getSubNodeList(), &SystemSub::NodeSub::NodeListSub::sendmsg, this, &Widget::onRecv, Qt::QueuedConnection);
     // map = new MapWidget(ui->mapView, this);
 
     // qDebug() << "step1";
@@ -33,28 +33,28 @@ Widget::Widget(QWidget *parent)
     map = new MapWidget();
     map->SetViewCount(1);
     ui->verticalLayout->addWidget(map);
-    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::poseUpDate,
+    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::MapSub::poseUpDate,
             map, &MapWidget::getPoseUpdated, Qt::QueuedConnection);
 
-    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::laserUpDate,
+    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::MapSub::laserUpDate,
             map, &MapWidget::getLaserUpdated, Qt::QueuedConnection);
 
-    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::occupancyLocalGridUpDate,
+    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::MapSub::occupancyLocalGridUpDate,
             map, &MapWidget::getOccupancyLocalGridUpdated, Qt::QueuedConnection);
 
-    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::occupancyGlobalGridUpDate,
+    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::MapSub::occupancyGlobalGridUpDate,
             map, &MapWidget::getOccupancyGlobalGridUpdated, Qt::QueuedConnection);
 
-    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::localPathUpdated,
+    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::MapSub::localPathUpdated,
             map, &MapWidget::getLocalPathUpdated, Qt::QueuedConnection);
 
-    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::globalPathUpdated,
+    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::MapSub::globalPathUpdated,
             map, &MapWidget::getGlobalPathUpdated, Qt::QueuedConnection);
 
-    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::mapUpdated,
+    connect(m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::MapSub::mapUpdated,
             map, &MapWidget::getMapUpdated, Qt::QueuedConnection);
     connect(map, &MapWidget::mousePress,
-            m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::getMousePress, Qt::QueuedConnection);
+            m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::MapSub::getMousePress, Qt::QueuedConnection);
     connect(map, &MapWidget::pixMapUpdate, this, [this](QImage pixmap_)
             { map->DispImage(1, pixmap_); }, Qt::QueuedConnection);
 
@@ -65,7 +65,7 @@ Widget::Widget(QWidget *parent)
     connect(this, &Widget::pushButtonFlog,
             map, &MapWidget::getPushButtonClick, Qt::QueuedConnection);
     connect(this, &Widget::pushButtonFlog,
-            m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::getInitializeAMCL, Qt::QueuedConnection);
+            m_nodeclass->getSubNodeMap(), &SystemSub::MapSub::MapSub::getInitializeAMCL, Qt::QueuedConnection);
     // m_imageViewList->DispImage(1, map->pixmap_);
     m_nodeclass->startNode();
 

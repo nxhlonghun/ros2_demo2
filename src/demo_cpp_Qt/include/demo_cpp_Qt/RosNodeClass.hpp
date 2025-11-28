@@ -19,8 +19,8 @@ private:
 
     rclcpp::executors::SingleThreadedExecutor *m_executor = nullptr;
     std::shared_ptr<rclcpp::Node> m_node;
-    std::shared_ptr<SystemSub::MapSub> m_mapSubNode;
-    std::shared_ptr<SystemSub::NodeListSub> m_subNodeList;
+    std::shared_ptr<SystemSub::MapSub::MapSub> m_mapSubNode;
+    std::shared_ptr<SystemSub::NodeSub::NodeListSub> m_subNodeList;
     std::shared_ptr<SysNode> m_pubNode;
     std::thread spin_thread_;
     bool spinning_;
@@ -35,8 +35,8 @@ public:
     void startNode();
     void stopNode();
 
-    SystemSub::NodeListSub *getSubNodeList();
-    SystemSub::MapSub *getSubNodeMap();
+    SystemSub::NodeSub::NodeListSub *getSubNodeList();
+    SystemSub::MapSub::MapSub *getSubNodeMap();
     rclcpp::executors::SingleThreadedExecutor *getExecutor() { return m_executor; }
     // std::shared_ptr<rviz_common::ros_integration::RosNodeAbstraction> getRosNodeAbstraction() { return m_rosNodeAbstraction; }
     // rclcpp::Clock::SharedPtr getClock() { return m_clock; }
