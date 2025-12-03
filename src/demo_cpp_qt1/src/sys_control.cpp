@@ -4,7 +4,7 @@ Control::Control()
 {
     options.use_intra_process_comms(true);
     auto node_sub = make_shared<SysSub>("system_sub_node", options);
-    auto node_pub = make_shared<SysNode>("system_pub_node", options);
+    // auto node_pub = make_shared<SysNode_list>("system_pub_node", options);
 }
 void Control::set_node_start()
 {

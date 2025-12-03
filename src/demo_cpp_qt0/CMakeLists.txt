@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(demo_cpp_Qt)
+project(demo_cpp_qt0)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -8,6 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(demo_interface REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
@@ -53,6 +54,7 @@ ament_target_dependencies(main
   rclcpp 
   demo_interface 
   rclcpp_lifecycle 
+  rclcpp_components
   geometry_msgs
   nav_msgs
   sensor_msgs
@@ -69,6 +71,39 @@ target_include_directories(main PRIVATE
 
 install(TARGETS main
   DESTINATION lib/${PROJECT_NAME}
+)
+
+add_library(SystemSub SHARED
+  src/SystemSub.cpp
+)
+
+ament_target_dependencies(SystemSub
+  rclcpp
+  demo_interface 
+  rclcpp_lifecycle 
+  rclcpp_components
+  sensor_msgs
+  nav_msgs
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+)
+
+target_link_libraries(SystemSub Qt6::Widgets )
+
+rclcpp_components_register_nodes(SystemSub
+  "SystemSub::NodeSub::NodeListSub"
+)
+rclcpp_components_register_nodes(SystemSub
+  "SystemSub::MapSub::MapSub"
+)
+
+install(
+  TARGETS SystemSub
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 if(BUILD_TESTING)

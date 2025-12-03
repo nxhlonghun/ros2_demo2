@@ -12,7 +12,7 @@ private:
     rclcpp::executors::SingleThreadedExecutor executor;
     rclcpp::NodeOptions options;
     std::shared_ptr<SysSub> node_sub;
-    std::shared_ptr<SysNode> node_pub;
+    std::shared_ptr<SysNode_list> node_pub;
 
 public:
     void set_node_start();

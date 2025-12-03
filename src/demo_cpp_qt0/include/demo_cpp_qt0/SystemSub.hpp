@@ -52,7 +52,7 @@ namespace SystemSub
             string topicName_;
 
         public:
-            NodeListSub(const string &node_name, const rclcpp::NodeOptions &options, QObject *parent = nullptr);
+            NodeListSub(const rclcpp::NodeOptions &options);
             void startNode(string topicName);
             void stopNode(string topicName);
             void deactivateNode(string topicName);
@@ -103,7 +103,7 @@ namespace SystemSub
             void initializeAMCL(double x, double y, double yaw);
 
         public:
-            MapSub(const string &node_name, QObject *parent = nullptr);
+            MapSub(const rclcpp::NodeOptions &options);
             void getMousePress(double x, double y, double yaw)
             {
                 onmousePress(x, y, yaw);

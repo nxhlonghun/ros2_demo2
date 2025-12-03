@@ -1,12 +1,12 @@
-#include "demo_cpp_Qt/RosNodeClass.hpp"
+#include "demo_cpp_qt0/RosNodeClass.hpp"
 
 RosNodeClass::RosNodeClass(QObject *parent) : QObject(parent), spinning_(false)
 {
     options.use_intra_process_comms(true);
     m_executor = new rclcpp::executors::SingleThreadedExecutor();
     m_node = make_shared<rclcpp::Node>("my_node");
-    m_mapSubNode = make_shared<SystemSub::MapSub::MapSub>("map_sub_node");
-    m_subNodeList = make_shared<SystemSub::NodeSub::NodeListSub>("system_sub_node", options);
+    m_mapSubNode = make_shared<SystemSub::MapSub::MapSub>(options);
+    m_subNodeList = make_shared<SystemSub::NodeSub::NodeListSub>(options);
     m_pubNode = make_shared<SysNode>("system_pub_node", options);
 }
 
